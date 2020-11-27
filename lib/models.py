@@ -151,10 +151,11 @@ class LSTMDecoder(nn.Module):
         self.input_size = 2 * len(self.alphabet)
         self.rnn_cell = nn.LSTMCell(input_size=self.input_size, hidden_size=len(self.alphabet))
 
-    def forward(self, hx=None):
+    def forward(self, hx=None, hard=False):
         # TODO support batch calculations
         batch_size = 1
         traversal = []
+        logits = []
         open_nodes = 1
         x = torch.zeros(batch_size, self.input_size)
         hx = torch.zeros(batch_size, self.rnn_cell.hidden_size) if hx is None else hx
@@ -163,18 +164,20 @@ class LSTMDecoder(nn.Module):
         while True:
             hx, cx = self.rnn_cell(x, (hx, cx))
             # TODO fix infinite formulas
-            if len(traversal) < 7:
-                sample = torch.multinomial(F.softmax(hx, dim=1), 1)
+            probas = F.softmax(hx, dim=1)
+            if hard:
+                sample = probas.argmax()
+                if len(traversal) > 15: assert 0
             else:
-                while arity(self.alphabet[sample]) != 0:
-                    sample = torch.multinomial(F.softmax(hx, dim=1), 1)
+                sample = torch.multinomial(probas, 1)[0][0]
 
-            traversal.append(sample[0][0])
+            logits.append(hx[0])
+            traversal.append(sample)
             open_nodes = open_nodes + arity(self.alphabet[sample]) - 1
             if open_nodes == 0:
                 break
             x = self.get_parent_sibling(traversal).reshape(1, -1).to(torch.float32)
-        return torch.stack(traversal)
+        return torch.stack(traversal), torch.stack(logits)
 
     def get_parent_sibling(self, current_traversal):
         counter = 0

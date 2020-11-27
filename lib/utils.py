@@ -27,6 +27,16 @@ def arity(token):
         raise Exception(f"Unknown operation: {token}")
 
 
+def get_cumulative_rewards(rewards, gamma=0.99):
+    g_t = 0
+    cum_rewards = []
+    for r in reversed(rewards):
+        g_t = r + gamma * g_t
+        cum_rewards.append(g_t)
+    cum_rewards.reverse()
+    return cum_rewards
+
+
 def context_target_split(x, y, num_context, num_extra_target):
     """Given inputs x and their value y, return random subsets of points for
     context and target. Note that following conventions from "Empirical
