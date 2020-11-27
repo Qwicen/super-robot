@@ -50,3 +50,35 @@ class SineData(Dataset):
 
     def __len__(self):
         return self.num_samples
+
+
+class Data(Dataset):
+    def __init__(self, coeff_range=(-4., 4.), degree=2, x_lim=(-10, 10), num_samples=1000, num_points=100, seed=17):
+        self.coeff_range = coeff_range
+        self.degree = degree
+        self.num_samples = num_samples
+        self.num_points = num_points
+        self.x_dim = 1  # x and y dim are fixed for this dataset.
+        self.y_dim = 1
+
+        # Generate data
+        self.data = []
+        a_min, a_max = coeff_range
+        np.random.seed(seed)
+        for i in range(num_samples):
+            # Sample random coefficients
+            a = np.random.randint(a_min, a_max, degree + 1)
+            # Shape (num_points, x_dim)
+            x = torch.linspace(*x_lim, num_points).unsqueeze(1)
+            # Shape (num_points, y_dim)
+            y = 0
+            for j in range(degree + 1):
+                y += a[j] * x ** j
+            print(a)
+            self.data.append((x, y))
+
+    def __getitem__(self, index):
+        return self.data[index]
+
+    def __len__(self):
+        return self.num_samples

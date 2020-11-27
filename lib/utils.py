@@ -13,8 +13,9 @@ def check_numpy(x):
 
 def arity(token):
     binary = ['add', 'mul', 'sub', 'div']
-    unary = ['sin', 'cos']
+    unary = ['sin', 'cos', 'sqr', 'cub']
     nullary = ['x', 'const']
+    nullary += [str(i) for i in range(-9, 10)]
 
     if token in binary:
         return 2

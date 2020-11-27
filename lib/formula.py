@@ -3,9 +3,8 @@ from scipy.optimize import minimize
 
 
 def prefix_to_infix(tokens):
-    const_cnt = -1
-    tokens = [tok if tok != 'const' else tok + f'[{(const_cnt := const_cnt + 1)}]' for tok in tokens]
-    return _prefix_to_infix(tokens), const_cnt + 1
+    tokens = tokens.copy()
+    return _prefix_to_infix(tokens)
 
 
 def _prefix_to_infix(tokens):
@@ -22,6 +21,10 @@ def _prefix_to_infix(tokens):
         return f'sin({_prefix_to_infix(tokens)})'
     elif token == 'cos':
         return f'cos({_prefix_to_infix(tokens)})'
+    elif token == 'sqr':
+        return f'(({_prefix_to_infix(tokens)}) ** 2)'
+    elif token == 'cub':
+        return f'(({_prefix_to_infix(tokens)}) ** 3)'
     else:
         return token
 
@@ -31,10 +34,10 @@ def eval_formula(formula, x, const=None):
     return eval(formula)
 
 
-def optimize_consts(formula, n_const, data):
+def optimize_consts(formula, n_const, X, y):
     def mse_loss(const):
-        y = eval_formula(formula, data.X_train, const)
-        return np.mean((y - data.y_train) ** 2)
+        y_pred = eval_formula(formula, X, const)
+        return np.mean((y_pred - y) ** 2)
 
-    opt_result = minimize(mse_loss, [1] * n_const)
+    opt_result = minimize(mse_loss, np.ones(n_const))
     return opt_result.fun, opt_result.x
